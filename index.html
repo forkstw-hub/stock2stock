@@ -49,11 +49,7 @@
       </div>
 
       <div class="form-grid">
-        <div class="form-group">
-          <label class="form-label" for="sellNameInput">股票名稱 / 代號 (選填)</label>
-          <input type="text" id="sellNameInput" class="form-input" placeholder="例: 2330 台積電" maxlength="15">
-        </div>
-
+        <!-- 賣出價格 -->
         <div class="form-group">
           <label class="form-label" for="sellPriceInput">賣出價格 (元) *</label>
           <div class="input-wrapper has-suffix">
@@ -62,26 +58,33 @@
           </div>
         </div>
 
-        <!-- 賣出張數 (在以賣估買模式顯示) -->
-        <div class="form-group full-width" id="sellLotsGroup">
-          <label class="form-label" for="sellLotsInput">賣出張數 *</label>
+        <!-- 賣出張數：輸入欄 (以賣估買模式) -->
+        <div class="form-group" id="sellInputCol">
+          <div class="label-with-tags">
+            <label class="form-label" for="sellLotsInput">賣出張數 *</label>
+            <div class="quick-tags-inline">
+              <button type="button" class="tag-btn-mini" data-target="sellLotsInput" data-action="+1">+1</button>
+              <button type="button" class="tag-btn-mini" data-target="sellLotsInput" data-action="+5">+5</button>
+              <button type="button" class="tag-btn-mini" data-target="sellLotsInput" data-action="clear">清</button>
+            </div>
+          </div>
           <div class="input-wrapper has-suffix">
             <input type="number" id="sellLotsInput" class="form-input" placeholder="1" min="0.001" step="any" inputmode="decimal" value="1">
             <span class="input-suffix">張</span>
           </div>
-          <div class="quick-tags">
-            <button type="button" class="tag-btn" data-target="sellLotsInput" data-action="+1">+1 張</button>
-            <button type="button" class="tag-btn" data-target="sellLotsInput" data-action="+5">+5 張</button>
-            <button type="button" class="tag-btn" data-target="sellLotsInput" data-action="+10">+10 張</button>
-            <button type="button" class="tag-btn" data-target="sellLotsInput" data-action="clear">清空</button>
-          </div>
+        </div>
+
+        <!-- 賣出張數：預估欄 (以買估賣模式顯示) -->
+        <div class="form-group" id="sellPreviewCol" style="display: none;">
+          <label class="form-label">需賣出 (試算)</label>
+          <div class="preview-box sell-box" id="sellPreviewText">1 張整</div>
         </div>
       </div>
     </section>
 
     <!-- 買賣標的對調按鈕 -->
     <div class="swap-container">
-      <button id="swapBtn" class="swap-btn" title="對調賣出與買入標的" aria-label="對調買賣標的">
+      <button id="swapBtn" class="swap-btn" title="對調賣出與買入價格" aria-label="對調買賣標的">
         ⇅
       </button>
     </div>
@@ -96,31 +99,34 @@
       </div>
 
       <div class="form-grid">
+        <!-- 欲買入價格 -->
         <div class="form-group">
-          <label class="form-label" for="buyNameInput">股票名稱 / 代號 (選填)</label>
-          <input type="text" id="buyNameInput" class="form-input" placeholder="例: 0050 元大台灣50" maxlength="15">
-        </div>
-
-        <div class="form-group">
-          <label class="form-label" for="buyPriceInput">欲買入價格 (元) *</label>
+          <label class="form-label" for="buyPriceInput">欲買價格 (元) *</label>
           <div class="input-wrapper has-suffix">
             <input type="number" id="buyPriceInput" class="form-input" placeholder="0.0" step="any" inputmode="decimal" value="25">
             <span class="input-suffix">元</span>
           </div>
         </div>
 
-        <!-- 買入張數 (在以買估賣模式顯示) -->
-        <div class="form-group full-width" id="buyLotsGroup" style="display: none;">
-          <label class="form-label" for="buyLotsInput">目標買入張數 *</label>
+        <!-- 買入張數：預估欄 (以賣估買模式顯示) -->
+        <div class="form-group" id="buyPreviewCol">
+          <label class="form-label">可買進 (試算)</label>
+          <div class="preview-box buy-box" id="buyPreviewText">3張 + 981股</div>
+        </div>
+
+        <!-- 買入張數：輸入欄 (以買估賣模式顯示) -->
+        <div class="form-group" id="buyInputCol" style="display: none;">
+          <div class="label-with-tags">
+            <label class="form-label" for="buyLotsInput">目標張數 *</label>
+            <div class="quick-tags-inline">
+              <button type="button" class="tag-btn-mini" data-target="buyLotsInput" data-action="+1">+1</button>
+              <button type="button" class="tag-btn-mini" data-target="buyLotsInput" data-action="+5">+5</button>
+              <button type="button" class="tag-btn-mini" data-target="buyLotsInput" data-action="clear">清</button>
+            </div>
+          </div>
           <div class="input-wrapper has-suffix">
             <input type="number" id="buyLotsInput" class="form-input" placeholder="1" min="0.001" step="any" inputmode="decimal" value="4">
             <span class="input-suffix">張</span>
-          </div>
-          <div class="quick-tags">
-            <button type="button" class="tag-btn" data-target="buyLotsInput" data-action="+1">+1 張</button>
-            <button type="button" class="tag-btn" data-target="buyLotsInput" data-action="+5">+5 張</button>
-            <button type="button" class="tag-btn" data-target="buyLotsInput" data-action="+10">+10 張</button>
-            <button type="button" class="tag-btn" data-target="buyLotsInput" data-action="clear">清空</button>
           </div>
         </div>
       </div>

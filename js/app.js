@@ -36,20 +36,22 @@
 
     // 賣出卡片
     sellCardTitle: document.getElementById('sellCardTitle'),
-    sellNameInput: document.getElementById('sellNameInput'),
     sellPriceInput: document.getElementById('sellPriceInput'),
-    sellLotsGroup: document.getElementById('sellLotsGroup'),
+    sellInputCol: document.getElementById('sellInputCol'),
     sellLotsInput: document.getElementById('sellLotsInput'),
+    sellPreviewCol: document.getElementById('sellPreviewCol'),
+    sellPreviewText: document.getElementById('sellPreviewText'),
 
     // 買賣互換
     swapBtn: document.getElementById('swapBtn'),
 
     // 買入卡片
     buyCardTitle: document.getElementById('buyCardTitle'),
-    buyNameInput: document.getElementById('buyNameInput'),
     buyPriceInput: document.getElementById('buyPriceInput'),
-    buyLotsGroup: document.getElementById('buyLotsGroup'),
+    buyInputCol: document.getElementById('buyInputCol'),
     buyLotsInput: document.getElementById('buyLotsInput'),
+    buyPreviewCol: document.getElementById('buyPreviewCol'),
+    buyPreviewText: document.getElementById('buyPreviewText'),
 
     // 費用設定
     feeToggle: document.getElementById('feeToggle'),
@@ -157,18 +159,26 @@
       el.tabSellToBuy.classList.add('active');
       el.tabBuyToSell.classList.remove('active');
 
-      // 賣出張數顯示，買入張數隱藏（由計算得出）
-      el.sellLotsGroup.style.display = 'block';
-      el.buyLotsGroup.style.display = 'none';
+      // 賣出卡片：顯示張數輸入欄，隱藏預覽欄
+      if (el.sellInputCol) el.sellInputCol.style.display = 'block';
+      if (el.sellPreviewCol) el.sellPreviewCol.style.display = 'none';
 
-      el.resultHeroLabel.textContent = '可買進買入股票';
+      // 買入卡片：隱藏目標張數輸入欄，顯示試算預覽欄
+      if (el.buyInputCol) el.buyInputCol.style.display = 'none';
+      if (el.buyPreviewCol) el.buyPreviewCol.style.display = 'block';
+
+      el.resultHeroLabel.textContent = '可買進目標股票';
     } else {
       el.tabBuyToSell.classList.add('active');
       el.tabSellToBuy.classList.remove('active');
 
-      // 買入張數顯示，賣出張數隱藏（由計算得出）
-      el.sellLotsGroup.style.display = 'none';
-      el.buyLotsGroup.style.display = 'block';
+      // 賣出卡片：隱藏輸入欄，顯示試算需賣張數預覽欄
+      if (el.sellInputCol) el.sellInputCol.style.display = 'none';
+      if (el.sellPreviewCol) el.sellPreviewCol.style.display = 'block';
+
+      // 買入卡片：顯示目標張數輸入欄，隱藏預覽欄
+      if (el.buyInputCol) el.buyInputCol.style.display = 'block';
+      if (el.buyPreviewCol) el.buyPreviewCol.style.display = 'none';
 
       el.resultHeroLabel.textContent = '需賣出持股以湊足資金';
     }
@@ -185,11 +195,9 @@
   // 核心執行計算與渲染
   function recalculate() {
     // 同步表單數據至狀態
-    state.sellName = el.sellNameInput.value.trim();
     state.sellPrice = parseFloat(el.sellPriceInput.value) || 0;
     state.sellLots = parseFloat(el.sellLotsInput.value) || 0;
 
-    state.buyName = el.buyNameInput.value.trim();
     state.buyPrice = parseFloat(el.buyPriceInput.value) || 0;
     state.buyLots = parseFloat(el.buyLotsInput.value) || 0;
 
@@ -243,9 +251,11 @@
     if (result.buyOddShares > 0) {
       el.resultHeroValue.innerHTML = `${result.buyLots}<span class="unit">張</span> + ${result.buyOddShares}<span class="unit">股</span>`;
       el.resultHeroSub.innerHTML = `共可買 <strong class="money">${formatMoney(result.totalBuyShares)}</strong> 股｜剩餘現金 <strong class="money">$${formatMoney(result.leftoverCash)}</strong>`;
+      if (el.buyPreviewText) el.buyPreviewText.textContent = `${result.buyLots}張 + ${result.buyOddShares}股`;
     } else {
       el.resultHeroValue.innerHTML = `${result.buyLots}<span class="unit">張整</span>`;
       el.resultHeroSub.innerHTML = `可剛好買滿｜剩餘現金 <strong class="money">$${formatMoney(result.leftoverCash)}</strong>`;
+      if (el.buyPreviewText) el.buyPreviewText.textContent = `${result.buyLots} 張整`;
     }
 
     // 若有整張不買零股的比較
@@ -275,8 +285,9 @@
     const result = window.StockCalculator.calculateBuyToSell(state.buyPrice, buyShares, state.sellPrice, config);
 
     if (!result || state.buyPrice <= 0 || state.sellPrice <= 0 || state.buyLots <= 0) {
-      el.resultHeroValue.innerHTML = `<span style="font-size:1.4rem; color:var(--text-muted)">請輸入完整買賣價格與張數</span>`;
+      el.resultHeroValue.innerHTML = `<span style="font-size:1.3rem; color:var(--text-muted)">請輸入價格與張數</span>`;
       el.resultHeroSub.innerHTML = '';
+      if (el.sellPreviewText) el.sellPreviewText.textContent = '-';
       el.valSellProceeds.textContent = '$0';
       el.valBuyCost.textContent = '$0';
       el.valLeftoverCash.textContent = '$0';
@@ -287,10 +298,11 @@
     // 大字結論：最少需賣出整張張數
     const lotsNeeded = result.lotOnly.lotsNeeded;
     el.resultHeroValue.innerHTML = `${lotsNeeded}<span class="unit">張整</span>`;
+    if (el.sellPreviewText) el.sellPreviewText.textContent = `${lotsNeeded} 張整`;
 
-    let subHtml = `賣出 ${lotsNeeded} 張實得 <strong class="money">$${formatMoney(result.lotOnly.proceeds.net)}</strong>，湊足後找零 <strong class="money">$${formatMoney(result.lotOnly.surplusCash)}</strong>`;
+    let subHtml = `賣出 ${lotsNeeded} 張實得 <strong class="money">$${formatMoney(result.lotOnly.proceeds.net)}</strong>，找零 <strong class="money">$${formatMoney(result.lotOnly.surplusCash)}</strong>`;
     if (result.exactSharesNeeded !== result.lotOnly.totalShares) {
-      subHtml += `<br><span style="font-size:0.78rem; color:var(--text-secondary)">（若賣精確零股：只需賣 <strong>${result.exactSellLots} 張 + ${result.exactOddShares} 股</strong>，共 ${formatMoney(result.exactSharesNeeded)} 股）</span>`;
+      subHtml += `<br><span style="font-size:0.78rem; color:var(--text-secondary)">（若賣精確零股：只需賣 <strong>${result.exactSellLots} 張 + ${result.exactOddShares} 股</strong>）</span>`;
     }
     el.resultHeroSub.innerHTML = subHtml;
 
@@ -312,28 +324,20 @@
 
   // 買賣標的互換 (Swap)
   function swapStocks() {
-    const tempName = el.sellNameInput.value;
     const tempPrice = el.sellPriceInput.value;
-
-    el.sellNameInput.value = el.buyNameInput.value;
     el.sellPriceInput.value = el.buyPriceInput.value;
-
-    el.buyNameInput.value = tempName;
     el.buyPriceInput.value = tempPrice;
 
-    showToast('已對調買入與賣出標的');
+    showToast('已對調買入與賣出價格');
     recalculate();
   }
 
   // 一鍵複製文字摘要
   function copySummary() {
-    const sellTitle = state.sellName ? `${state.sellName} ($${state.sellPrice})` : `賣出股 ($${state.sellPrice})`;
-    const buyTitle = state.buyName ? `${state.buyName} ($${state.buyPrice})` : `買入股 ($${state.buyPrice})`;
-
     let text = `【股票換股試算結果】\n`;
     text += `━━━━━━━━━━━━━━━━━━━━\n`;
-    text += `📤 賣出標的：${sellTitle}\n`;
-    text += `📥 買入標的：${buyTitle}\n`;
+    text += `📤 賣出價格：$${state.sellPrice} 元\n`;
+    text += `📥 買入價格：$${state.buyPrice} 元\n`;
     text += `⚙️ 計算模式：${state.mode === 'sell-to-buy' ? '以賣估買 (賣股轉買)' : '以買估賣 (想買湊錢)'}\n`;
     text += `💰 交易費用：${state.includeFees ? '含手續費與證交稅' : '純市值估算 (不計手續費/稅)'}\n`;
     text += `────────────────────\n`;
@@ -433,11 +437,9 @@
 
   // 將狀態帶入 HTML 輸入欄位
   function populateForm() {
-    el.sellNameInput.value = state.sellName || '';
     el.sellPriceInput.value = state.sellPrice || '';
     el.sellLotsInput.value = state.sellLots || 1;
 
-    el.buyNameInput.value = state.buyName || '';
     el.buyPriceInput.value = state.buyPrice || '';
     el.buyLotsInput.value = state.buyLots || 1;
 
@@ -467,8 +469,8 @@
 
     // 數值變動監聽 (支援即時計算)
     const liveInputs = [
-      el.sellNameInput, el.sellPriceInput, el.sellLotsInput,
-      el.buyNameInput, el.buyPriceInput, el.buyLotsInput,
+      el.sellPriceInput, el.sellLotsInput,
+      el.buyPriceInput, el.buyLotsInput,
       el.customDiscountInput, el.minFeeInput
     ];
     liveInputs.forEach(input => {
@@ -484,7 +486,7 @@
     el.taxRateSelect.addEventListener('change', recalculate);
 
     // 快捷增減張數按鈕
-    document.querySelectorAll('.tag-btn').forEach(btn => {
+    document.querySelectorAll('.tag-btn, .tag-btn-mini').forEach(btn => {
       btn.addEventListener('click', (e) => {
         const targetInputId = btn.getAttribute('data-target');
         const action = btn.getAttribute('data-action');
