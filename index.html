@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="description" content="股票換股計算器 (Stock to Stock Calculator) - 方便股民快速試算賣出持股可買入多少新標的，或欲買進目標股票需要賣出多少張股票，支援台股手續費折扣與證交稅試算。">
+  <meta name="theme-color" content="#2563eb">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <title>股票換股計算器 | 賣股轉買/想買湊錢 試算工具</title>
+  
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📈</text></svg>">
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-title">
+        <span class="logo-icon">📈</span>
+        <div>
+          <h1>股票換股計算器</h1>
+          <div class="subtitle">賣出股 ⇄ 買入股 資金轉換試算</div>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button id="resetBtn" class="icon-btn" title="重設數值" aria-label="重設數值">↺</button>
+        <button id="themeToggleBtn" class="icon-btn" title="切換深淺模式" aria-label="切換深淺模式">🌙</button>
+      </div>
+    </header>
+
+    <!-- 計算模式切換 Tabs -->
+    <nav class="mode-tabs" role="tablist">
+      <button id="tabSellToBuy" class="tab-btn active" role="tab" aria-selected="true">
+        <span>🪙</span> 以賣估買 (賣股轉買)
+      </button>
+      <button id="tabBuyToSell" class="tab-btn" role="tab" aria-selected="false">
+        <span>🎯</span> 以買估賣 (想買湊錢)
+      </button>
+    </nav>
+
+    <!-- 賣出股票卡片 -->
+    <section class="card card-sell">
+      <div class="card-header">
+        <div class="card-title">
+          <span class="badge-sell">賣出</span>
+          <span id="sellCardTitle">目前持股 (欲賣出)</span>
+        </div>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label" for="sellNameInput">股票名稱 / 代號 (選填)</label>
+          <input type="text" id="sellNameInput" class="form-input" placeholder="例: 2330 台積電" maxlength="15">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="sellPriceInput">賣出價格 (元) *</label>
+          <div class="input-wrapper has-suffix">
+            <input type="number" id="sellPriceInput" class="form-input" placeholder="0.0" step="any" inputmode="decimal" value="100">
+            <span class="input-suffix">元</span>
+          </div>
+        </div>
+
+        <!-- 賣出張數 (在以賣估買模式顯示) -->
+        <div class="form-group full-width" id="sellLotsGroup">
+          <label class="form-label" for="sellLotsInput">賣出張數 *</label>
+          <div class="input-wrapper has-suffix">
+            <input type="number" id="sellLotsInput" class="form-input" placeholder="1" min="0.001" step="any" inputmode="decimal" value="1">
+            <span class="input-suffix">張</span>
+          </div>
+          <div class="quick-tags">
+            <button type="button" class="tag-btn" data-target="sellLotsInput" data-action="+1">+1 張</button>
+            <button type="button" class="tag-btn" data-target="sellLotsInput" data-action="+5">+5 張</button>
+            <button type="button" class="tag-btn" data-target="sellLotsInput" data-action="+10">+10 張</button>
+            <button type="button" class="tag-btn" data-target="sellLotsInput" data-action="clear">清空</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 買賣標的對調按鈕 -->
+    <div class="swap-container">
+      <button id="swapBtn" class="swap-btn" title="對調賣出與買入標的" aria-label="對調買賣標的">
+        ⇅
+      </button>
+    </div>
+
+    <!-- 買入股票卡片 -->
+    <section class="card card-buy">
+      <div class="card-header">
+        <div class="card-title">
+          <span class="badge-buy">買入</span>
+          <span id="buyCardTitle">目標股票 (欲買進)</span>
+        </div>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label" for="buyNameInput">股票名稱 / 代號 (選填)</label>
+          <input type="text" id="buyNameInput" class="form-input" placeholder="例: 0050 元大台灣50" maxlength="15">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="buyPriceInput">欲買入價格 (元) *</label>
+          <div class="input-wrapper has-suffix">
+            <input type="number" id="buyPriceInput" class="form-input" placeholder="0.0" step="any" inputmode="decimal" value="25">
+            <span class="input-suffix">元</span>
+          </div>
+        </div>
+
+        <!-- 買入張數 (在以買估賣模式顯示) -->
+        <div class="form-group full-width" id="buyLotsGroup" style="display: none;">
+          <label class="form-label" for="buyLotsInput">目標買入張數 *</label>
+          <div class="input-wrapper has-suffix">
+            <input type="number" id="buyLotsInput" class="form-input" placeholder="1" min="0.001" step="any" inputmode="decimal" value="4">
+            <span class="input-suffix">張</span>
+          </div>
+          <div class="quick-tags">
+            <button type="button" class="tag-btn" data-target="buyLotsInput" data-action="+1">+1 張</button>
+            <button type="button" class="tag-btn" data-target="buyLotsInput" data-action="+5">+5 張</button>
+            <button type="button" class="tag-btn" data-target="buyLotsInput" data-action="+10">+10 張</button>
+            <button type="button" class="tag-btn" data-target="buyLotsInput" data-action="clear">清空</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 進階費用手風琴 -->
+    <details class="settings-accordion">
+      <summary class="settings-summary">
+        <span>⚙️ 手續費與證交稅設定</span>
+        <span style="font-size: 0.8rem; color: var(--accent-primary)">展開/收合 ▾</span>
+      </summary>
+      <div class="settings-body" id="feeDetails">
+        <div class="toggle-row">
+          <div>
+            <div class="toggle-label">計入台股手續費與證券交易稅</div>
+            <div class="toggle-desc">關閉為純股價換算；開啟計算 0.1425% 與 0.3% 稅費</div>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="feeToggle">
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="form-grid" style="margin-top: 10px;">
+          <div class="form-group">
+            <label class="form-label" for="feeDiscountSelect">券商手續費折扣</label>
+            <select id="feeDiscountSelect" class="form-select">
+              <option value="0.6" selected>6 折 (一般電子下單)</option>
+              <option value="0.28">2.8 折 (常見優惠)</option>
+              <option value="0.5">5 折</option>
+              <option value="0.38">3.8 折</option>
+              <option value="0.2">2 折 (超殺優惠)</option>
+              <option value="1.0">無折扣 (100% 全額)</option>
+              <option value="custom">自訂折扣 %</option>
+            </select>
+          </div>
+
+          <div class="form-group" id="customDiscountGroup" style="display: none;">
+            <label class="form-label" for="customDiscountInput">自訂折讓比例 (%)</label>
+            <div class="input-wrapper has-suffix">
+              <input type="number" id="customDiscountInput" class="form-input" placeholder="60" value="60" min="0" max="100">
+              <span class="input-suffix">%</span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="minFeeInput">單筆最低手續費 (元)</label>
+            <div class="input-wrapper has-suffix">
+              <input type="number" id="minFeeInput" class="form-input" placeholder="20" value="20" min="0">
+              <span class="input-suffix">元</span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="taxRateSelect">證券交易稅率</label>
+            <select id="taxRateSelect" class="form-select">
+              <option value="0.003" selected>現股賣出 0.3%</option>
+              <option value="0.0015">現股當沖 0.15%</option>
+              <option value="0.001">ETF 賣出 0.1%</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </details>
+
+    <!-- 計算結果卡片 -->
+    <section class="result-card" id="resultCard">
+      <div class="result-title">
+        <span>試算結果報告</span>
+        <span style="font-size: 0.72rem; opacity: 0.8;">即時試算</span>
+      </div>
+
+      <!-- 核心大字區 -->
+      <div class="result-hero">
+        <div class="result-hero-label" id="resultHeroLabel">可買進買入股票</div>
+        <div class="result-hero-value" id="resultHeroValue">
+          4<span class="unit">張整</span>
+        </div>
+        <div class="result-hero-sub" id="resultHeroSub">
+          共可買 4,000 股｜剩餘現金 $0
+        </div>
+      </div>
+
+      <!-- 關鍵數據網格 -->
+      <div class="breakdown-grid">
+        <div class="breakdown-item">
+          <div class="breakdown-label">賣出淨得款項</div>
+          <div class="breakdown-value sell-text" id="valSellProceeds">$100,000</div>
+        </div>
+        <div class="breakdown-item">
+          <div class="breakdown-label">買入所需花費</div>
+          <div class="breakdown-value buy-text" id="valBuyCost">$100,000</div>
+        </div>
+        <div class="breakdown-item">
+          <div class="breakdown-label">結餘 / 找零現金</div>
+          <div class="breakdown-value" id="valLeftoverCash">$0</div>
+        </div>
+        <div class="breakdown-item">
+          <div class="breakdown-label">預估交易稅費總計</div>
+          <div class="breakdown-value" id="valTotalFees">未計費用</div>
+        </div>
+      </div>
+
+      <!-- 費用明細展開表 -->
+      <table class="detail-table">
+        <tbody>
+          <tr>
+            <td>賣出成交總價金</td>
+            <td id="tableSellPrice">$100,000</td>
+          </tr>
+          <tr class="fee-detail-row" style="display: none;">
+            <td>賣出手續費 (券商)</td>
+            <td id="tableSellFee">-$0</td>
+          </tr>
+          <tr class="fee-detail-row" style="display: none;">
+            <td>賣出證券交易稅</td>
+            <td id="tableSellTax">-$0</td>
+          </tr>
+          <tr>
+            <td>買入成交總價金</td>
+            <td id="tableBuyPrice">$100,000</td>
+          </tr>
+          <tr class="fee-detail-row" style="display: none;">
+            <td>買入手續費 (券商)</td>
+            <td id="tableBuyFee">+$0</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- 快捷操作按鈕 -->
+      <div class="action-btn-group">
+        <button id="copyBtn" class="btn-primary">
+          <span>📋</span> 一鍵複製試算摘要
+        </button>
+      </div>
+    </section>
+
+    <!-- Toast 彈出提示 -->
+    <div id="toast" class="toast">已複製試算摘要到剪貼簿！</div>
+
+    <!-- 頁尾 -->
+    <footer class="app-footer">
+      <p>💡 提示：台股 1 張 = 1,000 股。實際成交金額請依各券商交割單為準。</p>
+      <p style="margin-top: 4px;">開源於 GitHub · 免費無廣告 · 支援手機瀏覽器加到主畫面</p>
+    </footer>
+  </div>
+
+  <!-- 引入模組腳本 -->
+  <script src="js/calculator.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
