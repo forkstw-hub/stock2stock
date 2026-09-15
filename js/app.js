@@ -232,14 +232,15 @@
     }
   }
 
-  // 渲染模式 A (以賣估買)
+  // 渲染模式 A (以賣估買 - 純整張)
   function renderSellToBuy(config) {
     const sellShares = state.sellLots * state.sharesPerLot;
     const result = window.StockCalculator.calculateSellToBuy(state.sellPrice, sellShares, state.buyPrice, config);
 
     if (!result || state.sellPrice <= 0 || state.buyPrice <= 0 || state.sellLots <= 0) {
-      el.resultHeroValue.innerHTML = `<span style="font-size:1.4rem; color:var(--text-muted)">請輸入完整買賣價格與張數</span>`;
+      el.resultHeroValue.innerHTML = `<span style="font-size:1.3rem; color:var(--text-muted)">請輸入價格與張數</span>`;
       el.resultHeroSub.innerHTML = '';
+      if (el.buyPreviewText) el.buyPreviewText.textContent = '-';
       el.valSellProceeds.textContent = '$0';
       el.valBuyCost.textContent = '$0';
       el.valLeftoverCash.textContent = '$0';
@@ -247,39 +248,29 @@
       return;
     }
 
-    // 大字結論
-    if (result.buyOddShares > 0) {
-      el.resultHeroValue.innerHTML = `${result.buyLots}<span class="unit">張</span> + ${result.buyOddShares}<span class="unit">股</span>`;
-      el.resultHeroSub.innerHTML = `共可買 <strong class="money">${formatMoney(result.totalBuyShares)}</strong> 股｜剩餘現金 <strong class="money">$${formatMoney(result.leftoverCash)}</strong>`;
-      if (el.buyPreviewText) el.buyPreviewText.textContent = `${result.buyLots}張 + ${result.buyOddShares}股`;
-    } else {
-      el.resultHeroValue.innerHTML = `${result.buyLots}<span class="unit">張整</span>`;
-      el.resultHeroSub.innerHTML = `可剛好買滿｜剩餘現金 <strong class="money">$${formatMoney(result.leftoverCash)}</strong>`;
-      if (el.buyPreviewText) el.buyPreviewText.textContent = `${result.buyLots} 張整`;
-    }
+    // 純整張結果
+    const lots = result.lotOnly.lots;
+    el.resultHeroValue.innerHTML = `${lots}<span class="unit">張整</span>`;
+    el.resultHeroSub.innerHTML = `買入花費 <strong class="money">$${formatMoney(result.lotOnly.costInfo.net)}</strong>｜剩餘找零現金 <strong class="money">$${formatMoney(result.lotOnly.leftoverCash)}</strong>`;
+    if (el.buyPreviewText) el.buyPreviewText.textContent = `${lots} 張整`;
 
-    // 若有整張不買零股的比較
-    if (result.buyOddShares > 0) {
-      el.resultHeroSub.innerHTML += `<br><span style="font-size:0.78rem; color:var(--text-secondary)">（若只買整張 ${result.lotOnly.lots} 張，可剩現金 <strong>$${formatMoney(result.lotOnly.leftoverCash)}</strong>）</span>`;
-    }
-
-    // 統計卡片
+    // 統計卡片 (純整張)
     el.valSellProceeds.textContent = `$${formatMoney(result.sellInfo.net)}`;
-    el.valBuyCost.textContent = `$${formatMoney(result.buyCostInfo.net)}`;
-    el.valLeftoverCash.textContent = `$${formatMoney(result.leftoverCash)}`;
+    el.valBuyCost.textContent = `$${formatMoney(result.lotOnly.costInfo.net)}`;
+    el.valLeftoverCash.textContent = `$${formatMoney(result.lotOnly.leftoverCash)}`;
 
-    const totalFees = (result.sellInfo.fee || 0) + (result.sellInfo.tax || 0) + (result.buyCostInfo.fee || 0);
+    const totalFees = (result.sellInfo.fee || 0) + (result.sellInfo.tax || 0) + (result.lotOnly.costInfo.fee || 0);
     el.valTotalFees.textContent = state.includeFees ? `$${formatMoney(totalFees)}` : '未計費用';
 
-    // 明細表格
+    // 明細表格 (純整張)
     el.tableSellPrice.textContent = `$${formatMoney(result.sellInfo.gross)}`;
     el.tableSellFee.textContent = `-$${formatMoney(result.sellInfo.fee)}`;
     el.tableSellTax.textContent = `-$${formatMoney(result.sellInfo.tax)}`;
-    el.tableBuyPrice.textContent = `$${formatMoney(result.buyCostInfo.gross)}`;
-    el.tableBuyFee.textContent = `+$${formatMoney(result.buyCostInfo.fee)}`;
+    el.tableBuyPrice.textContent = `$${formatMoney(result.lotOnly.costInfo.gross)}`;
+    el.tableBuyFee.textContent = `+$${formatMoney(result.lotOnly.costInfo.fee)}`;
   }
 
-  // 渲染模式 B (以買估賣)
+  // 渲染模式 B (以買估賣 - 純整張)
   function renderBuyToSell(config) {
     const buyShares = state.buyLots * state.sharesPerLot;
     const result = window.StockCalculator.calculateBuyToSell(state.buyPrice, buyShares, state.sellPrice, config);
@@ -300,13 +291,9 @@
     el.resultHeroValue.innerHTML = `${lotsNeeded}<span class="unit">張整</span>`;
     if (el.sellPreviewText) el.sellPreviewText.textContent = `${lotsNeeded} 張整`;
 
-    let subHtml = `賣出 ${lotsNeeded} 張實得 <strong class="money">$${formatMoney(result.lotOnly.proceeds.net)}</strong>，找零 <strong class="money">$${formatMoney(result.lotOnly.surplusCash)}</strong>`;
-    if (result.exactSharesNeeded !== result.lotOnly.totalShares) {
-      subHtml += `<br><span style="font-size:0.78rem; color:var(--text-secondary)">（若賣精確零股：只需賣 <strong>${result.exactSellLots} 張 + ${result.exactOddShares} 股</strong>）</span>`;
-    }
-    el.resultHeroSub.innerHTML = subHtml;
+    el.resultHeroSub.innerHTML = `賣出 ${lotsNeeded} 張實得 <strong class="money">$${formatMoney(result.lotOnly.proceeds.net)}</strong>｜湊足後找零 <strong class="money">$${formatMoney(result.lotOnly.surplusCash)}</strong>`;
 
-    // 統計卡片
+    // 統計卡片 (純整張)
     el.valSellProceeds.textContent = `$${formatMoney(result.lotOnly.proceeds.net)}`;
     el.valBuyCost.textContent = `$${formatMoney(result.buyCostInfo.net)}`;
     el.valLeftoverCash.textContent = `$${formatMoney(result.lotOnly.surplusCash)}`;
@@ -314,7 +301,7 @@
     const totalFees = (result.lotOnly.proceeds.fee || 0) + (result.lotOnly.proceeds.tax || 0) + (result.buyCostInfo.fee || 0);
     el.valTotalFees.textContent = state.includeFees ? `$${formatMoney(totalFees)}` : '未計費用';
 
-    // 明細表格
+    // 明細表格 (純整張)
     el.tableSellPrice.textContent = `$${formatMoney(result.lotOnly.proceeds.gross)}`;
     el.tableSellFee.textContent = `-$${formatMoney(result.lotOnly.proceeds.fee)}`;
     el.tableSellTax.textContent = `-$${formatMoney(result.lotOnly.proceeds.tax)}`;
@@ -343,13 +330,13 @@
     text += `────────────────────\n`;
 
     if (state.mode === 'sell-to-buy') {
-      text += `• 預計賣出：${state.sellLots} 張 (${formatMoney(state.sellLots * 1000)} 股)\n`;
+      text += `• 預計賣出：${state.sellLots} 張\n`;
       text += `• 賣出淨得：${el.valSellProceeds.textContent}\n`;
       text += `• 🎯 可買進：${el.resultHeroValue.textContent.replace(/\s+/g, ' ').trim()}\n`;
       text += `• 買入花費：${el.valBuyCost.textContent}\n`;
-      text += `• 剩餘現金：${el.valLeftoverCash.textContent}\n`;
+      text += `• 剩餘找零：${el.valLeftoverCash.textContent}\n`;
     } else {
-      text += `• 目標買入：${state.buyLots} 張 (${formatMoney(state.buyLots * 1000)} 股)\n`;
+      text += `• 目標買入：${state.buyLots} 張\n`;
       text += `• 買入花費：${el.valBuyCost.textContent}\n`;
       text += `• 🎯 需賣出：${el.resultHeroValue.textContent.replace(/\s+/g, ' ').trim()}\n`;
       text += `• 賣出淨得：${el.valSellProceeds.textContent}\n`;
