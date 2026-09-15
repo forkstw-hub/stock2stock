@@ -20,7 +20,7 @@
 
 只要推送到 GitHub 並開啟 GitHub Pages，即可擁有專屬線上網址：
 
-> 🔗 **線上網址格式**：`https://<你的GitHub帳號>.github.io/stock2stock/`
+> 🔗 **線上網址格式**：`https://forkstw-hub.github.io/stock2stock/`
 
 ---
 
