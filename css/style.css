@@ -296,7 +296,7 @@ body {
 
 .quick-tags-inline {
   display: flex;
-  gap: 3px;
+  gap: 2px;
 }
 
 .tag-btn-mini {
@@ -304,8 +304,8 @@ body {
   border: 1px solid var(--border-color);
   color: var(--text-secondary);
   border-radius: 4px;
-  padding: 1px 5px;
-  font-size: 0.7rem;
+  padding: 1px 4px;
+  font-size: 0.68rem;
   font-weight: 600;
   cursor: pointer;
   line-height: 1.2;
