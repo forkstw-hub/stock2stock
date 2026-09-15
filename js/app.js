@@ -15,12 +15,13 @@
     buyName: '',
     buyPrice: 25,
     buyLots: 4,
-    includeFees: false,
+    includeFees: true,   // 預設開啟手續費與稅金
     feeDiscount: 0.6,    // 預設 6 折
     customDiscount: 60,  // 自訂折扣 %
     minFee: 20,
     taxRate: 0.003,      // 現股 0.3%
-    sharesPerLot: 1000
+    sharesPerLot: 1000,
+    version: 2
   };
 
   // DOM 元素引用
@@ -125,7 +126,8 @@
         feeDiscount: state.feeDiscount,
         customDiscount: state.customDiscount,
         minFee: state.minFee,
-        taxRate: state.taxRate
+        taxRate: state.taxRate,
+        version: state.version
       }));
     } catch (e) {
       console.warn('LocalStorage save failed:', e);
@@ -137,6 +139,11 @@
       const saved = localStorage.getItem('stock2stock_state');
       if (saved) {
         const parsed = JSON.parse(saved);
+        // 若為舊版緩存，強制設定手續費預設開啟
+        if (!parsed.version || parsed.version < 2) {
+          parsed.includeFees = true;
+          parsed.version = 2;
+        }
         Object.assign(state, parsed);
       }
     } catch (e) {
@@ -414,7 +421,7 @@
     state.buyName = '';
     state.buyPrice = 25;
     state.buyLots = 4;
-    state.includeFees = false;
+    state.includeFees = true; // 重設時預設開啟手續費與稅金
     state.feeDiscount = 0.6;
     state.minFee = 20;
     state.taxRate = 0.003;

@@ -9,7 +9,7 @@ const DEFAULT_CONFIG = {
   feeDiscount: 1.0,            // 手續費折扣 (如 0.6 代表 6折)
   minFee: 20,                  // 最低手續費 (元)
   taxRate: 0.003,              // 證券交易稅 0.3% (賣出收取)
-  includeFees: false           // 是否計入手續費與稅金
+  includeFees: true            // 是否計入手續費與稅金 (預設開啟)
 };
 
 /**

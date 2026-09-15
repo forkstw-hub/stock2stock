@@ -126,66 +126,6 @@
       </div>
     </section>
 
-    <!-- 進階費用手風琴 -->
-    <details class="settings-accordion">
-      <summary class="settings-summary">
-        <span>⚙️ 手續費與證交稅設定</span>
-        <span style="font-size: 0.8rem; color: var(--accent-primary)">展開/收合 ▾</span>
-      </summary>
-      <div class="settings-body" id="feeDetails">
-        <div class="toggle-row">
-          <div>
-            <div class="toggle-label">計入台股手續費與證券交易稅</div>
-            <div class="toggle-desc">關閉為純股價換算；開啟計算 0.1425% 與 0.3% 稅費</div>
-          </div>
-          <label class="switch">
-            <input type="checkbox" id="feeToggle">
-            <span class="slider"></span>
-          </label>
-        </div>
-
-        <div class="form-grid" style="margin-top: 10px;">
-          <div class="form-group">
-            <label class="form-label" for="feeDiscountSelect">券商手續費折扣</label>
-            <select id="feeDiscountSelect" class="form-select">
-              <option value="0.6" selected>6 折 (一般電子下單)</option>
-              <option value="0.28">2.8 折 (常見優惠)</option>
-              <option value="0.5">5 折</option>
-              <option value="0.38">3.8 折</option>
-              <option value="0.2">2 折 (超殺優惠)</option>
-              <option value="1.0">無折扣 (100% 全額)</option>
-              <option value="custom">自訂折扣 %</option>
-            </select>
-          </div>
-
-          <div class="form-group" id="customDiscountGroup" style="display: none;">
-            <label class="form-label" for="customDiscountInput">自訂折讓比例 (%)</label>
-            <div class="input-wrapper has-suffix">
-              <input type="number" id="customDiscountInput" class="form-input" placeholder="60" value="60" min="0" max="100">
-              <span class="input-suffix">%</span>
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label" for="minFeeInput">單筆最低手續費 (元)</label>
-            <div class="input-wrapper has-suffix">
-              <input type="number" id="minFeeInput" class="form-input" placeholder="20" value="20" min="0">
-              <span class="input-suffix">元</span>
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label" for="taxRateSelect">證券交易稅率</label>
-            <select id="taxRateSelect" class="form-select">
-              <option value="0.003" selected>現股賣出 0.3%</option>
-              <option value="0.0015">現股當沖 0.15%</option>
-              <option value="0.001">ETF 賣出 0.1%</option>
-            </select>
-          </div>
-        </div>
-      </div>
-    </details>
-
     <!-- 計算結果卡片 -->
     <section class="result-card" id="resultCard">
       <div class="result-title">
@@ -231,11 +171,11 @@
             <td>賣出成交總價金</td>
             <td id="tableSellPrice">$100,000</td>
           </tr>
-          <tr class="fee-detail-row" style="display: none;">
+          <tr class="fee-detail-row">
             <td>賣出手續費 (券商)</td>
             <td id="tableSellFee">-$0</td>
           </tr>
-          <tr class="fee-detail-row" style="display: none;">
+          <tr class="fee-detail-row">
             <td>賣出證券交易稅</td>
             <td id="tableSellTax">-$0</td>
           </tr>
@@ -243,7 +183,7 @@
             <td>買入成交總價金</td>
             <td id="tableBuyPrice">$100,000</td>
           </tr>
-          <tr class="fee-detail-row" style="display: none;">
+          <tr class="fee-detail-row">
             <td>買入手續費 (券商)</td>
             <td id="tableBuyFee">+$0</td>
           </tr>
@@ -257,6 +197,66 @@
         </button>
       </div>
     </section>
+
+    <!-- 進階費用手風琴 (移至畫面底部) -->
+    <details class="settings-accordion">
+      <summary class="settings-summary">
+        <span>⚙️ 手續費與證交稅設定</span>
+        <span style="font-size: 0.8rem; color: var(--accent-primary)">展開/收合 ▾</span>
+      </summary>
+      <div class="settings-body" id="feeDetails">
+        <div class="toggle-row">
+          <div>
+            <div class="toggle-label">計入台股手續費與證券交易稅</div>
+            <div class="toggle-desc">開啟計算 0.1425% 與 0.3% 稅費；關閉為純股價換算</div>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="feeToggle" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="form-grid" style="margin-top: 10px;">
+          <div class="form-group">
+            <label class="form-label" for="feeDiscountSelect">券商手續費折扣</label>
+            <select id="feeDiscountSelect" class="form-select">
+              <option value="0.6" selected>6 折 (一般電子下單)</option>
+              <option value="0.28">2.8 折 (常見優惠)</option>
+              <option value="0.5">5 折</option>
+              <option value="0.38">3.8 折</option>
+              <option value="0.2">2 折 (超殺優惠)</option>
+              <option value="1.0">無折扣 (100% 全額)</option>
+              <option value="custom">自訂折扣 %</option>
+            </select>
+          </div>
+
+          <div class="form-group" id="customDiscountGroup" style="display: none;">
+            <label class="form-label" for="customDiscountInput">自訂折讓比例 (%)</label>
+            <div class="input-wrapper has-suffix">
+              <input type="number" id="customDiscountInput" class="form-input" placeholder="60" value="60" min="0" max="100">
+              <span class="input-suffix">%</span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="minFeeInput">單筆最低手續費 (元)</label>
+            <div class="input-wrapper has-suffix">
+              <input type="number" id="minFeeInput" class="form-input" placeholder="20" value="20" min="0">
+              <span class="input-suffix">元</span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="taxRateSelect">證券交易稅率</label>
+            <select id="taxRateSelect" class="form-select">
+              <option value="0.003" selected>現股賣出 0.3%</option>
+              <option value="0.0015">現股當沖 0.15%</option>
+              <option value="0.001">ETF 賣出 0.1%</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </details>
 
     <!-- Toast 彈出提示 -->
     <div id="toast" class="toast">已複製試算摘要到剪貼簿！</div>
