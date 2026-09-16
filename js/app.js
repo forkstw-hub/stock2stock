@@ -20,9 +20,9 @@
     feeDiscount: 0.6,    // 預設 6 折
     customDiscount: 60,  // 自訂折扣 %
     minFee: 20,
-    taxRate: 0.003,      // 現股 0.3%
+    taxRate: 0,          // 預設債券 ETF 停徵證交稅 0%
     sharesPerLot: 1000,
-    version: 3
+    version: 4
   };
 
   // DOM 元素引用
@@ -148,14 +148,15 @@
       const saved = localStorage.getItem('stock2stock_state');
       if (saved) {
         const parsed = JSON.parse(saved);
-        // 若為舊版緩存，強制設定手續費預設開啟與預設股價
-        if (!parsed.version || parsed.version < 3) {
+        // 若為舊版緩存，強制設定手續費預設開啟與預設股價及免稅
+        if (!parsed.version || parsed.version < 4) {
           parsed.includeFees = true;
           parsed.sellPrice = 30.97;
           parsed.buyPrice = 26.39;
           parsed.sellName = '00719B';
           parsed.buyName = '00687B';
-          parsed.version = 3;
+          parsed.taxRate = 0;
+          parsed.version = 4;
         }
         Object.assign(state, parsed);
       }
@@ -217,7 +218,7 @@
     state.feeDiscount = el.feeDiscountSelect.value;
     state.customDiscount = parseFloat(el.customDiscountInput.value) || 60;
     state.minFee = parseFloat(el.minFeeInput.value) || 0;
-    state.taxRate = parseFloat(el.taxRateSelect.value) || 0.003;
+    state.taxRate = isNaN(parseFloat(el.taxRateSelect.value)) ? 0 : parseFloat(el.taxRateSelect.value);
 
     // 自訂折扣欄位顯示判斷
     el.customDiscountGroup.style.display = (state.feeDiscount === 'custom') ? 'block' : 'none';
@@ -370,7 +371,7 @@
       text += `• 預計賣出：${state.sellLots} 張\n`;
       text += `• 賣出淨得：${el.valSellProceeds.textContent}\n`;
       if (state.cashAmount > 0) {
-        text += `• 總可用資金：$${formatMoney((state.sellLots * 1000 * state.sellPrice * (state.includeFees ? 0.995 : 1)) + state.cashAmount)}\n`;
+        text += `• 自備現金：$${formatMoney(state.cashAmount)}\n`;
       }
       text += `• 🎯 可買進：${el.resultHeroValue.textContent.replace(/\s+/g, ' ').trim()}\n`;
       text += `• 買入花費：${el.valBuyCost.textContent}\n`;
@@ -456,7 +457,7 @@
     state.includeFees = true; // 重設時預設開啟手續費與稅金
     state.feeDiscount = 0.6;
     state.minFee = 20;
-    state.taxRate = 0.003;
+    state.taxRate = 0;
 
     populateForm();
     recalculate();
@@ -477,7 +478,7 @@
     el.feeDiscountSelect.value = state.feeDiscount || '0.6';
     el.customDiscountInput.value = state.customDiscount || 60;
     el.minFeeInput.value = state.minFee || 20;
-    el.taxRateSelect.value = state.taxRate || 0.003;
+    el.taxRateSelect.value = state.taxRate !== undefined ? String(state.taxRate) : '0';
 
     updateModeUI();
   }

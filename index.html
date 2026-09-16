@@ -232,7 +232,7 @@
         <div class="toggle-row">
           <div>
             <div class="toggle-label">計入台股手續費與證券交易稅</div>
-            <div class="toggle-desc">開啟計算 0.1425% 與 0.3% 稅費；關閉為純股價換算</div>
+            <div class="toggle-desc">開啟計算 0.1425% 手續費與證交稅；關閉為純股價換算</div>
           </div>
           <label class="switch">
             <input type="checkbox" id="feeToggle" checked>
@@ -244,12 +244,12 @@
           <div class="form-group">
             <label class="form-label" for="feeDiscountSelect">券商手續費折扣</label>
             <select id="feeDiscountSelect" class="form-select">
-              <option value="0.6" selected>6 折 (一般電子下單)</option>
+              <option value="0.6" selected>6 折 (一般電子下單實質成本)</option>
+              <option value="1.0">無折扣 (100%全額 / 券商次月退佣交割款)</option>
               <option value="0.28">2.8 折 (常見優惠)</option>
               <option value="0.5">5 折</option>
               <option value="0.38">3.8 折</option>
               <option value="0.2">2 折 (超殺優惠)</option>
-              <option value="1.0">無折扣 (100% 全額)</option>
               <option value="custom">自訂折扣 %</option>
             </select>
           </div>
@@ -273,9 +273,10 @@
           <div class="form-group">
             <label class="form-label" for="taxRateSelect">證券交易稅率</label>
             <select id="taxRateSelect" class="form-select">
-              <option value="0.003" selected>現股賣出 0.3%</option>
+              <option value="0" selected>債券 ETF 0% (停徵免稅)</option>
+              <option value="0.001">股票 ETF 0.1%</option>
+              <option value="0.003">現股股票 0.3%</option>
               <option value="0.0015">現股當沖 0.15%</option>
-              <option value="0.001">ETF 賣出 0.1%</option>
             </select>
           </div>
         </div>

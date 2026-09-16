@@ -6,9 +6,9 @@
 const DEFAULT_CONFIG = {
   sharesPerLot: 1000,          // 每張股數
   feeRate: 0.001425,           // 基本手續費率 0.1425%
-  feeDiscount: 1.0,            // 手續費折扣 (如 0.6 代表 6折)
+  feeDiscount: 0.6,            // 手續費折扣 (如 0.6 代表 6折)
   minFee: 20,                  // 最低手續費 (元)
-  taxRate: 0.003,              // 證券交易稅 0.3% (賣出收取)
+  taxRate: 0.0,                // 證券交易稅 0% (債券 ETF 停徵免稅至 2026 年底)
   includeFees: true            // 是否計入手續費與稅金 (預設開啟)
 };
 
@@ -28,8 +28,8 @@ function calculateSellProceeds(price, shares, config = {}) {
     };
   }
 
-  // 手續費計算（取整數）
-  let rawFee = Math.floor(gross * cfg.feeRate * cfg.feeDiscount);
+  // 手續費計算（依台交所規範四捨五入）
+  let rawFee = Math.round(gross * cfg.feeRate * cfg.feeDiscount);
   if (cfg.minFee > 0 && rawFee < cfg.minFee && gross > 0) {
     rawFee = cfg.minFee;
   }
@@ -61,7 +61,8 @@ function calculateBuyCost(price, shares, config = {}) {
     };
   }
 
-  let rawFee = Math.floor(gross * cfg.feeRate * cfg.feeDiscount);
+  // 手續費計算（依台交所規範四捨五入）
+  let rawFee = Math.round(gross * cfg.feeRate * cfg.feeDiscount);
   if (cfg.minFee > 0 && rawFee < cfg.minFee && gross > 0) {
     rawFee = cfg.minFee;
   }
