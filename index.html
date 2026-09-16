@@ -54,8 +54,9 @@
       <div class="card-header">
         <div class="card-title">
           <span class="badge-sell">賣出</span>
-          <span id="sellCardTitle">目前持股 (欲賣出)</span>
+          <span id="sellCardTitle">持股 (00719B)</span>
         </div>
+        <button type="button" id="refreshSellPriceBtn" class="sync-btn" title="重新抓取 00719B 最新市場價格">↻ 00719B現價</button>
       </div>
 
       <div class="form-grid">
@@ -63,7 +64,7 @@
         <div class="form-group">
           <label class="form-label" for="sellPriceInput">賣出價格 (元) *</label>
           <div class="input-wrapper has-suffix">
-            <input type="number" id="sellPriceInput" class="form-input" placeholder="0.0" step="any" inputmode="decimal" value="100">
+            <input type="number" id="sellPriceInput" class="form-input" placeholder="30.97" step="any" inputmode="decimal" value="30.97">
             <span class="input-suffix">元</span>
           </div>
         </div>
@@ -105,8 +106,9 @@
       <div class="card-header">
         <div class="card-title">
           <span class="badge-buy">買入</span>
-          <span id="buyCardTitle">目標股票 (欲買進)</span>
+          <span id="buyCardTitle">目標 (00687B)</span>
         </div>
+        <button type="button" id="refreshBuyPriceBtn" class="sync-btn" title="重新抓取 00687B 最新市場價格">↻ 00687B現價</button>
       </div>
 
       <div class="form-grid">
@@ -114,7 +116,7 @@
         <div class="form-group">
           <label class="form-label" for="buyPriceInput">欲買價格 (元) *</label>
           <div class="input-wrapper has-suffix">
-            <input type="number" id="buyPriceInput" class="form-input" placeholder="0.0" step="any" inputmode="decimal" value="25">
+            <input type="number" id="buyPriceInput" class="form-input" placeholder="26.39" step="any" inputmode="decimal" value="26.39">
             <span class="input-suffix">元</span>
           </div>
         </div>

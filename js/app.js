@@ -9,11 +9,11 @@
   // 狀態管理
   const state = {
     mode: 'sell-to-buy', // 'sell-to-buy' 或 'buy-to-sell'
-    sellName: '',
-    sellPrice: 100,
+    sellName: '00719B',
+    sellPrice: 30.97,    // 預設 00719B 現價
     sellLots: 1,
-    buyName: '',
-    buyPrice: 25,
+    buyName: '00687B',
+    buyPrice: 26.39,     // 預設 00687B 現價
     buyLots: 4,
     cashAmount: 0,       // 現金部位 (預設 0 元)
     includeFees: true,   // 預設開啟手續費與稅金
@@ -22,7 +22,7 @@
     minFee: 20,
     taxRate: 0.003,      // 現股 0.3%
     sharesPerLot: 1000,
-    version: 2
+    version: 3
   };
 
   // DOM 元素引用
@@ -38,6 +38,7 @@
 
     // 賣出卡片
     sellCardTitle: document.getElementById('sellCardTitle'),
+    refreshSellPriceBtn: document.getElementById('refreshSellPriceBtn'),
     sellPriceInput: document.getElementById('sellPriceInput'),
     sellInputCol: document.getElementById('sellInputCol'),
     sellLotsInput: document.getElementById('sellLotsInput'),
@@ -49,6 +50,7 @@
 
     // 買入卡片
     buyCardTitle: document.getElementById('buyCardTitle'),
+    refreshBuyPriceBtn: document.getElementById('refreshBuyPriceBtn'),
     buyPriceInput: document.getElementById('buyPriceInput'),
     buyInputCol: document.getElementById('buyInputCol'),
     buyLotsInput: document.getElementById('buyLotsInput'),
@@ -146,10 +148,14 @@
       const saved = localStorage.getItem('stock2stock_state');
       if (saved) {
         const parsed = JSON.parse(saved);
-        // 若為舊版緩存，強制設定手續費預設開啟
-        if (!parsed.version || parsed.version < 2) {
+        // 若為舊版緩存，強制設定手續費預設開啟與預設股價
+        if (!parsed.version || parsed.version < 3) {
           parsed.includeFees = true;
-          parsed.version = 2;
+          parsed.sellPrice = 30.97;
+          parsed.buyPrice = 26.39;
+          parsed.sellName = '00719B';
+          parsed.buyName = '00687B';
+          parsed.version = 3;
         }
         Object.assign(state, parsed);
       }
@@ -440,11 +446,11 @@
 
   // 重設為預設值
   function resetAll() {
-    state.sellName = '';
-    state.sellPrice = 100;
+    state.sellName = '00719B';
+    state.sellPrice = 30.97;
     state.sellLots = 1;
-    state.buyName = '';
-    state.buyPrice = 25;
+    state.buyName = '00687B';
+    state.buyPrice = 26.39;
     state.buyLots = 4;
     state.cashAmount = 0;
     state.includeFees = true; // 重設時預設開啟手續費與稅金
@@ -455,6 +461,7 @@
     populateForm();
     recalculate();
     showToast('已重設為預設數值');
+    autoSyncAllPrices(true);
   }
 
   // 將狀態帶入 HTML 輸入欄位
@@ -473,6 +480,67 @@
     el.taxRateSelect.value = state.taxRate || 0.003;
 
     updateModeUI();
+  }
+
+  // 抓取台股/ETF 最新市場收盤價 (FinMind API，原生支援 CORS)
+  async function fetchStockPrice(stockId) {
+    const d = new Date();
+    d.setDate(d.getDate() - 25);
+    const startDate = d.toISOString().split('T')[0];
+    const url = `https://api.finmindtrade.com/api/v4/data?dataset=TaiwanStockPrice&data_id=${stockId}&start_date=${startDate}`;
+
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`API HTTP error ${res.status}`);
+    const json = await res.json();
+    if (!json.data || json.data.length === 0) throw new Error('No price data found');
+    return json.data[json.data.length - 1].close;
+  }
+
+  // 單獨同步某一檔標的現價
+  async function syncPriceFor(stockId, inputEl, btnEl) {
+    if (btnEl) btnEl.classList.add('loading');
+    try {
+      const price = await fetchStockPrice(stockId);
+      if (price && price > 0) {
+        inputEl.value = price;
+        recalculate();
+        showToast(`已更新 ${stockId} 最新現價：$${price}`);
+      }
+    } catch (e) {
+      console.warn(`Fetch ${stockId} price failed:`, e);
+      showToast(`抓取 ${stockId} 現價失敗，維持目前價格`);
+    } finally {
+      if (btnEl) btnEl.classList.remove('loading');
+    }
+  }
+
+  // 自動同步 00719B 與 00687B 最新現價
+  async function autoSyncAllPrices(silent = false) {
+    try {
+      const [pSell, pBuy] = await Promise.all([
+        fetchStockPrice('00719B').catch(() => null),
+        fetchStockPrice('00687B').catch(() => null)
+      ]);
+      let updated = false;
+      if (pSell && pSell > 0) {
+        state.sellPrice = pSell;
+        el.sellPriceInput.value = pSell;
+        updated = true;
+      }
+      if (pBuy && pBuy > 0) {
+        state.buyPrice = pBuy;
+        el.buyPriceInput.value = pBuy;
+        updated = true;
+      }
+      if (updated) {
+        recalculate();
+        if (!silent) {
+          showToast(`已同步最新現價：00719B $${state.sellPrice} / 00687B $${state.buyPrice}`);
+        }
+      }
+    } catch (e) {
+      console.warn('Auto sync failed:', e);
+    }
   }
 
   // 事件綁定
@@ -532,6 +600,18 @@
       });
     });
 
+    // 現價同步按鈕
+    if (el.refreshSellPriceBtn) {
+      el.refreshSellPriceBtn.addEventListener('click', () => {
+        syncPriceFor('00719B', el.sellPriceInput, el.refreshSellPriceBtn);
+      });
+    }
+    if (el.refreshBuyPriceBtn) {
+      el.refreshBuyPriceBtn.addEventListener('click', () => {
+        syncPriceFor('00687B', el.buyPriceInput, el.refreshBuyPriceBtn);
+      });
+    }
+
     // 互換標的
     el.swapBtn.addEventListener('click', swapStocks);
 
@@ -548,6 +628,8 @@
     populateForm();
     bindEvents();
     recalculate();
+    // 進入網頁時自動非同步更新 00719B 與 00687B 最新價格
+    autoSyncAllPrices(false);
   }
 
   // DOM 載入後啟動
