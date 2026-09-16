@@ -20,9 +20,19 @@
         <span class="logo-icon">📈</span>
         <div>
           <h1>股票換股計算器</h1>
-          <div class="subtitle">賣出股 ⇄ 買入股 資金轉換試算</div>
+          <div class="subtitle">換股資金轉換試算</div>
         </div>
       </div>
+
+      <!-- 現金部位輸入區 (Title 右側) -->
+      <div class="header-cash-box" title="自備現金部位，可與舊股賣出款合併買進新股">
+        <label for="cashInput" class="header-cash-label">💵 自備現金</label>
+        <div class="header-cash-wrapper">
+          <input type="number" id="cashInput" class="header-cash-input" value="0" min="0" step="1000" inputmode="decimal" placeholder="0">
+          <span class="header-cash-suffix">元</span>
+        </div>
+      </div>
+
       <div class="header-actions">
         <button id="resetBtn" class="icon-btn" title="重設數值" aria-label="重設數值">↺</button>
         <button id="themeToggleBtn" class="icon-btn" title="切換深淺模式" aria-label="切換深淺模式">🌙</button>
@@ -186,6 +196,10 @@
           <tr class="fee-detail-row">
             <td>賣出證券交易稅</td>
             <td id="tableSellTax">-$0</td>
+          </tr>
+          <tr id="tableCashRow" style="display: none;">
+            <td>自備現金部位</td>
+            <td id="tableCashPrice">+$0</td>
           </tr>
           <tr>
             <td>買入成交總價金</td>

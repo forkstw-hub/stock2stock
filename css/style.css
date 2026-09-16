@@ -96,35 +96,94 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
-  padding-top: 6px;
+  margin-bottom: 8px;
+  padding-top: 4px;
+  gap: 6px;
 }
 
 .header-title {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
+  flex-shrink: 0;
 }
 
 .header-title .logo-icon {
-  font-size: 26px;
+  font-size: 22px;
   line-height: 1;
 }
 
 .header-title h1 {
-  font-size: 1.35rem;
+  font-size: 1.12rem;
   font-weight: 700;
   letter-spacing: -0.02em;
 }
 
 .header-title .subtitle {
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   color: var(--text-secondary);
+}
+
+/* Header Cash Input Box (Title 右側) */
+.header-cash-box {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  background: var(--bg-surface);
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 2px 7px;
+  box-shadow: var(--shadow-sm);
+  transition: border-color 0.2s, box-shadow 0.2s;
+  min-width: 90px;
+  max-width: 125px;
+  flex: 1;
+}
+
+.header-cash-box:focus-within {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+}
+
+.header-cash-label {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.header-cash-wrapper {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  justify-content: flex-end;
+}
+
+.header-cash-input {
+  width: 100%;
+  border: none;
+  background: transparent;
+  font-family: var(--font-mono);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--accent-primary);
+  text-align: right;
+  outline: none;
+  padding: 0 2px 0 0;
+}
+
+.header-cash-suffix {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  pointer-events: none;
 }
 
 .header-actions {
   display: flex;
-  gap: 8px;
+  gap: 5px;
+  flex-shrink: 0;
 }
 
 .icon-btn {
@@ -132,15 +191,15 @@ body {
   border: 1px solid var(--border-color);
   color: var(--text-primary);
   border-radius: var(--radius-sm);
-  width: 38px;
-  height: 38px;
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   box-shadow: var(--shadow-sm);
   transition: all 0.15s;
-  font-size: 1.05rem;
+  font-size: 0.95rem;
 }
 
 .icon-btn:hover {

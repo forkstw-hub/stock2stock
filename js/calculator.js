@@ -81,21 +81,25 @@ function calculateBuyCost(price, shares, config = {}) {
  * @param {number} sellShares 賣出總股數
  * @param {number} buyPrice 欲買入價格
  * @param {object} config 設定參數
+ * @param {number} cashAmount 自備現金部位 (元，預設 0)
  */
-function calculateSellToBuy(sellPrice, sellShares, buyPrice, config = {}) {
+function calculateSellToBuy(sellPrice, sellShares, buyPrice, config = {}, cashAmount = 0) {
   const cfg = { ...DEFAULT_CONFIG, ...config };
+  const extraCash = Math.max(0, parseFloat(cashAmount) || 0);
 
   if (sellPrice <= 0 || sellShares <= 0 || buyPrice <= 0) {
     return null;
   }
 
-  // 1. 計算賣出實收金額
+  // 1. 計算賣出實收金額 + 自備現金部位
   const sellInfo = calculateSellProceeds(sellPrice, sellShares, cfg);
-  const availableBudget = sellInfo.net;
+  const availableBudget = sellInfo.net + extraCash;
 
   if (availableBudget <= 0) {
     return {
       sellInfo,
+      cashAmount: extraCash,
+      totalBudget: 0,
       buyLots: 0,
       buyOddShares: 0,
       totalBuyShares: 0,
@@ -105,7 +109,7 @@ function calculateSellToBuy(sellPrice, sellShares, buyPrice, config = {}) {
         lots: 0,
         shares: 0,
         costInfo: { gross: 0, fee: 0, net: 0 },
-        leftoverCash: availableBudget
+        leftoverCash: 0
       }
     };
   }
@@ -139,6 +143,8 @@ function calculateSellToBuy(sellPrice, sellShares, buyPrice, config = {}) {
 
   return {
     sellInfo,
+    cashAmount: extraCash,
+    totalBudget: availableBudget,
     buyLots,
     buyOddShares,
     totalBuyShares: bestShares,
@@ -159,9 +165,11 @@ function calculateSellToBuy(sellPrice, sellShares, buyPrice, config = {}) {
  * @param {number} buyShares 欲買入總股數
  * @param {number} sellPrice 賣出價格
  * @param {object} config 設定參數
+ * @param {number} cashAmount 自備現金部位 (元，預設 0)
  */
-function calculateBuyToSell(buyPrice, buyShares, sellPrice, config = {}) {
+function calculateBuyToSell(buyPrice, buyShares, sellPrice, config = {}, cashAmount = 0) {
   const cfg = { ...DEFAULT_CONFIG, ...config };
+  const extraCash = Math.max(0, parseFloat(cashAmount) || 0);
 
   if (buyPrice <= 0 || buyShares <= 0 || sellPrice <= 0) {
     return null;
@@ -171,15 +179,39 @@ function calculateBuyToSell(buyPrice, buyShares, sellPrice, config = {}) {
   const buyCostInfo = calculateBuyCost(buyPrice, buyShares, cfg);
   const targetFunds = buyCostInfo.net;
 
-  // 2. 二分搜尋找出最少需要賣出多少股，才足以支付 targetFunds
+  // 2. 扣除自備現金後，還需從賣股取得的差額
+  const neededFromSelling = Math.max(0, targetFunds - extraCash);
+
+  if (neededFromSelling === 0) {
+    const zeroProceeds = { gross: 0, fee: 0, tax: 0, net: 0 };
+    return {
+      buyCostInfo,
+      targetFunds,
+      cashAmount: extraCash,
+      neededFromSelling: 0,
+      exactSharesNeeded: 0,
+      exactSellLots: 0,
+      exactOddShares: 0,
+      exactSellProceeds: zeroProceeds,
+      exactRemainingCash: extraCash - targetFunds,
+      lotOnly: {
+        lotsNeeded: 0,
+        totalShares: 0,
+        proceeds: zeroProceeds,
+        surplusCash: extraCash - targetFunds
+      }
+    };
+  }
+
+  // 3. 二分搜尋找出最少需要賣出多少股，才足以支付 neededFromSelling
   let low = 1;
-  let high = Math.ceil(targetFunds / (sellPrice * 0.9)) + 2000;
+  let high = Math.ceil(neededFromSelling / (sellPrice * 0.9)) + 2000;
   let exactSharesNeeded = high;
 
   while (low <= high) {
     const mid = Math.floor((low + high) / 2);
     const proceeds = calculateSellProceeds(sellPrice, mid, cfg).net;
-    if (proceeds >= targetFunds) {
+    if (proceeds >= neededFromSelling) {
       exactSharesNeeded = mid;
       high = mid - 1;
     } else {
@@ -189,17 +221,19 @@ function calculateBuyToSell(buyPrice, buyShares, sellPrice, config = {}) {
 
   // 精確賣出股數得到的淨額與結餘
   const exactSellProceeds = calculateSellProceeds(sellPrice, exactSharesNeeded, cfg);
-  const exactRemainingCash = exactSellProceeds.net - targetFunds;
+  const exactRemainingCash = (exactSellProceeds.net + extraCash) - targetFunds;
 
-  // 3. 計算若只能賣「整張」需要多少張
+  // 4. 計算若只能賣「整張」需要多少張
   const lotsNeeded = Math.ceil(exactSharesNeeded / cfg.sharesPerLot);
   const lotShares = lotsNeeded * cfg.sharesPerLot;
   const lotSellProceeds = calculateSellProceeds(sellPrice, lotShares, cfg);
-  const lotRemainingCash = lotSellProceeds.net - targetFunds;
+  const lotRemainingCash = (lotSellProceeds.net + extraCash) - targetFunds;
 
   return {
     buyCostInfo,
     targetFunds,
+    cashAmount: extraCash,
+    neededFromSelling,
     exactSharesNeeded,
     exactSellLots: Math.floor(exactSharesNeeded / cfg.sharesPerLot),
     exactOddShares: exactSharesNeeded % cfg.sharesPerLot,

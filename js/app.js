@@ -15,6 +15,7 @@
     buyName: '',
     buyPrice: 25,
     buyLots: 4,
+    cashAmount: 0,       // 現金部位 (預設 0 元)
     includeFees: true,   // 預設開啟手續費與稅金
     feeDiscount: 0.6,    // 預設 6 折
     customDiscount: 60,  // 自訂折扣 %
@@ -26,9 +27,10 @@
 
   // DOM 元素引用
   const el = {
-    // 主題
+    // 主題與自備現金
     themeToggleBtn: document.getElementById('themeToggleBtn'),
     resetBtn: document.getElementById('resetBtn'),
+    cashInput: document.getElementById('cashInput'),
 
     // 模式切換 Tabs
     tabSellToBuy: document.getElementById('tabSellToBuy'),
@@ -78,6 +80,8 @@
     tableSellPrice: document.getElementById('tableSellPrice'),
     tableSellFee: document.getElementById('tableSellFee'),
     tableSellTax: document.getElementById('tableSellTax'),
+    tableCashRow: document.getElementById('tableCashRow'),
+    tableCashPrice: document.getElementById('tableCashPrice'),
     tableBuyPrice: document.getElementById('tableBuyPrice'),
     tableBuyFee: document.getElementById('tableBuyFee'),
     feeDetailsRows: document.querySelectorAll('.fee-detail-row'),
@@ -124,6 +128,7 @@
         buyName: state.buyName,
         buyPrice: state.buyPrice,
         buyLots: state.buyLots,
+        cashAmount: state.cashAmount,
         includeFees: state.includeFees,
         feeDiscount: state.feeDiscount,
         customDiscount: state.customDiscount,
@@ -200,6 +205,7 @@
 
     state.buyPrice = parseFloat(el.buyPriceInput.value) || 0;
     state.buyLots = parseFloat(el.buyLotsInput.value) || 0;
+    state.cashAmount = parseFloat(el.cashInput.value) || 0;
 
     state.includeFees = el.feeToggle.checked;
     state.feeDiscount = el.feeDiscountSelect.value;
@@ -214,6 +220,14 @@
     el.feeDetailsRows.forEach(row => {
       row.style.display = state.includeFees ? 'table-row' : 'none';
     });
+
+    // 自備現金明細列顯示判斷
+    if (el.tableCashRow) {
+      el.tableCashRow.style.display = state.cashAmount > 0 ? 'table-row' : 'none';
+    }
+    if (el.tableCashPrice) {
+      el.tableCashPrice.textContent = `+$${formatMoney(state.cashAmount)}`;
+    }
 
     const config = {
       sharesPerLot: state.sharesPerLot,
@@ -235,7 +249,7 @@
   // 渲染模式 A (以賣估買 - 純整張)
   function renderSellToBuy(config) {
     const sellShares = state.sellLots * state.sharesPerLot;
-    const result = window.StockCalculator.calculateSellToBuy(state.sellPrice, sellShares, state.buyPrice, config);
+    const result = window.StockCalculator.calculateSellToBuy(state.sellPrice, sellShares, state.buyPrice, config, state.cashAmount);
 
     if (!result || state.sellPrice <= 0 || state.buyPrice <= 0 || state.sellLots <= 0) {
       el.resultHeroValue.innerHTML = `<span style="font-size:1.3rem; color:var(--text-muted)">請輸入價格與張數</span>`;
@@ -251,7 +265,12 @@
     // 純整張結果
     const lots = result.lotOnly.lots;
     el.resultHeroValue.innerHTML = `${lots}<span class="unit">張整</span>`;
-    el.resultHeroSub.innerHTML = `買入花費 <strong class="money">$${formatMoney(result.lotOnly.costInfo.net)}</strong>｜剩餘找零現金 <strong class="money">$${formatMoney(result.lotOnly.leftoverCash)}</strong>`;
+
+    let subText = `買入花費 <strong class="money">$${formatMoney(result.lotOnly.costInfo.net)}</strong>｜剩餘找零現金 <strong class="money">$${formatMoney(result.lotOnly.leftoverCash)}</strong>`;
+    if (state.cashAmount > 0) {
+      subText += `<br><span style="font-size:0.75rem; color:var(--text-secondary)">（舊股賣出 $${formatMoney(result.sellInfo.net)} + 現金 $${formatMoney(state.cashAmount)}，總預算 $${formatMoney(result.totalBudget)}）</span>`;
+    }
+    el.resultHeroSub.innerHTML = subText;
     if (el.buyPreviewText) el.buyPreviewText.textContent = `${lots} 張整`;
 
     // 統計卡片 (純整張)
@@ -273,7 +292,7 @@
   // 渲染模式 B (以買估賣 - 純整張)
   function renderBuyToSell(config) {
     const buyShares = state.buyLots * state.sharesPerLot;
-    const result = window.StockCalculator.calculateBuyToSell(state.buyPrice, buyShares, state.sellPrice, config);
+    const result = window.StockCalculator.calculateBuyToSell(state.buyPrice, buyShares, state.sellPrice, config, state.cashAmount);
 
     if (!result || state.buyPrice <= 0 || state.sellPrice <= 0 || state.buyLots <= 0) {
       el.resultHeroValue.innerHTML = `<span style="font-size:1.3rem; color:var(--text-muted)">請輸入價格與張數</span>`;
@@ -291,7 +310,16 @@
     el.resultHeroValue.innerHTML = `${lotsNeeded}<span class="unit">張整</span>`;
     if (el.sellPreviewText) el.sellPreviewText.textContent = `${lotsNeeded} 張整`;
 
-    el.resultHeroSub.innerHTML = `賣出 ${lotsNeeded} 張實得 <strong class="money">$${formatMoney(result.lotOnly.proceeds.net)}</strong>｜湊足後找零 <strong class="money">$${formatMoney(result.lotOnly.surplusCash)}</strong>`;
+    if (lotsNeeded === 0) {
+      el.resultHeroSub.innerHTML = `自備現金足以全額支付！買入後找零 <strong class="money">$${formatMoney(result.lotOnly.surplusCash)}</strong>`;
+    } else {
+      let sub = `賣出 ${lotsNeeded} 張實得 <strong class="money">$${formatMoney(result.lotOnly.proceeds.net)}</strong>`;
+      if (state.cashAmount > 0) {
+        sub += ` + 現金 $${formatMoney(state.cashAmount)}`;
+      }
+      sub += `｜湊足後找零 <strong class="money">$${formatMoney(result.lotOnly.surplusCash)}</strong>`;
+      el.resultHeroSub.innerHTML = sub;
+    }
 
     // 統計卡片 (純整張)
     el.valSellProceeds.textContent = `$${formatMoney(result.lotOnly.proceeds.net)}`;
@@ -325,6 +353,9 @@
     text += `━━━━━━━━━━━━━━━━━━━━\n`;
     text += `📤 賣出價格：$${state.sellPrice} 元\n`;
     text += `📥 買入價格：$${state.buyPrice} 元\n`;
+    if (state.cashAmount > 0) {
+      text += `💵 自備現金：$${formatMoney(state.cashAmount)} 元\n`;
+    }
     text += `⚙️ 計算模式：${state.mode === 'sell-to-buy' ? '以賣估買 (賣股轉買)' : '以買估賣 (想買湊錢)'}\n`;
     text += `💰 交易費用：${state.includeFees ? '含手續費與證交稅' : '純市值估算 (不計手續費/稅)'}\n`;
     text += `────────────────────\n`;
@@ -332,6 +363,9 @@
     if (state.mode === 'sell-to-buy') {
       text += `• 預計賣出：${state.sellLots} 張\n`;
       text += `• 賣出淨得：${el.valSellProceeds.textContent}\n`;
+      if (state.cashAmount > 0) {
+        text += `• 總可用資金：$${formatMoney((state.sellLots * 1000 * state.sellPrice * (state.includeFees ? 0.995 : 1)) + state.cashAmount)}\n`;
+      }
       text += `• 🎯 可買進：${el.resultHeroValue.textContent.replace(/\s+/g, ' ').trim()}\n`;
       text += `• 買入花費：${el.valBuyCost.textContent}\n`;
       text += `• 剩餘找零：${el.valLeftoverCash.textContent}\n`;
@@ -412,6 +446,7 @@
     state.buyName = '';
     state.buyPrice = 25;
     state.buyLots = 4;
+    state.cashAmount = 0;
     state.includeFees = true; // 重設時預設開啟手續費與稅金
     state.feeDiscount = 0.6;
     state.minFee = 20;
@@ -429,6 +464,7 @@
 
     el.buyPriceInput.value = state.buyPrice || '';
     el.buyLotsInput.value = state.buyLots || 1;
+    if (el.cashInput) el.cashInput.value = state.cashAmount || 0;
 
     el.feeToggle.checked = !!state.includeFees;
     el.feeDiscountSelect.value = state.feeDiscount || '0.6';
@@ -458,6 +494,7 @@
     const liveInputs = [
       el.sellPriceInput, el.sellLotsInput,
       el.buyPriceInput, el.buyLotsInput,
+      el.cashInput,
       el.customDiscountInput, el.minFeeInput
     ];
     liveInputs.forEach(input => {
